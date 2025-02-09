@@ -1,15 +1,31 @@
 import os
+import openai
 import requests
 import feedparser
-import openai
 from datetime import datetime
 import re
 import subprocess
+import json
 
 # Load OpenAI API key from environment variable
 openai.api_key = os.getenv("OPENAI_API_KEY")
 if not openai.api_key:
     raise ValueError("OpenAI API key not found. Please set the OPENAI_API_KEY environment variable.")
+
+# Cache file for storing previously generated content
+CACHE_FILE = "cache.json"
+
+# Load cache
+def load_cache():
+    if os.path.exists(CACHE_FILE):
+        with open(CACHE_FILE, "r", encoding="utf-8") as file:
+            return json.load(file)
+    return {}
+
+# Save cache
+def save_cache(cache):
+    with open(CACHE_FILE, "w", encoding="utf-8") as file:
+        json.dump(cache, file)
 
 # Fetch trending topics from Reddit
 def get_reddit_trends():
@@ -43,20 +59,28 @@ def get_news_topics():
 
 # Generate blog content using OpenAI's GPT
 def generate_blog_content(topic):
+    cache = load_cache()
+    if topic in cache:
+        print(f"Using cached content for topic: {topic}")
+        return cache[topic]
+
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # You can also use "gpt-4" if available
+            model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are a professional blogger who writes engaging and well-researched articles."},
-                {"role": "user", "content": f"Write a detailed blog post about '{topic}'. Include an introduction, main points, and a conclusion. The tone should be professional but accessible."}
+                {"role": "system", "content": "You are a blogger."},
+                {"role": "user", "content": f"Write a short blog post about '{topic}'."}
             ],
-            max_tokens=500,  # Adjust the length of the generated content
-            temperature=0.7  # Controls randomness (lower = more deterministic)
+            max_tokens=200,  # Reduced token limit to stay within free tier
+            temperature=0.7
         )
-        return response['choices'][0]['message']['content']
+        content = response['choices'][0]['message']['content']
+        cache[topic] = content
+        save_cache(cache)
+        return content
     except Exception as e:
-        print(f"An error occurred while generating content: {e}")
-        return "No content generated."
+        print(f"An error occurred while generating content for '{topic}': {e}")
+        return "No content generated due to API quota exceeded or other errors."
 
 # Create a Markdown file for the blog post
 def create_blog_post(title, content):
@@ -111,10 +135,10 @@ def main():
 
     all_trends = reddit_trends + google_trends + news_trends
 
-    # Generate a blog post for each topic
-    for topic in all_trends[:5]:  # Limit to 5 posts for testing
+    # Generate a blog post for each topic (limit to 2 posts to stay within rate limits)
+    for topic in all_trends[:2]:  # Limit to 2 posts instead of 5
         print(f"Generating blog post for topic: {topic}")
-        content = generate_blog_content(topic)  # Use AI to generate content
+        content = generate_blog_content(topic)  # Use OpenAI to generate content
         create_blog_post(topic, content)
 
     # Push changes to GitHub
