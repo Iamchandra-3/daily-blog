@@ -1,6 +1,6 @@
 title: Daily Trending Blog
 description: A daily blog on trending topics with detailed insights.
-baseurl: "" # Leave empty if your site is hosted at the root of your GitHub Pages URL
+baseurl: "/daily-blog" # Leave empty if your site is hosted at the root of your GitHub Pages URL
 url: "https://iamchandra-3.github.io/daily-blog/" # Replace with your GitHub Pages URL
 
 plugins:
