@@ -1,0 +1,7 @@
+title: Daily Trending Blog
+description: A daily blog on trending topics with detailed insights.
+baseurl: "" # Leave empty if your site is hosted at the root of your GitHub Pages URL
+url: "https://iamchandra-3.github.io" # Replace with your GitHub Pages URL
+
+plugins:
+  - jekyll-seo-tag
