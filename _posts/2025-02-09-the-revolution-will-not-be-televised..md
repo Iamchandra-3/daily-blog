@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "The revolution will not be televised."
-date: 2025-02-09 19:48:31
+date: 2025-02-09 19:57:15
 categories: trending
 ---
 
